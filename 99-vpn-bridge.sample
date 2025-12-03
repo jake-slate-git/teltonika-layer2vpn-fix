@@ -1,0 +1,30 @@
+#!/bin/sh
+# Teltonika Layer-2 VPN Fix - hotplug + OpenVPN "up" script
+# Ensures TAP/OVPN interfaces behave as pure L2 bridge ports:
+#  - no local IP
+#  - always attached to br-lan
+
+IF="${INTERFACE:-}"
+[ -z "$IF" ] && IF="${dev:-}"
+[ -z "$IF" ] && IF="$1"
+
+[ -z "$IF" ] && exit 0
+
+case "$IF" in
+  tap*|ovpn*) ;;
+  *) exit 0 ;;
+esac
+
+if ! brctl show br-lan >/dev/null 2>&1; then
+  logger -t layer2vpn "bridge-fix: br-lan not found, skipping for $IF"
+  exit 0
+fi
+
+logger -t layer2vpn "bridge-fix: fixing $IF (flush IP + attach to br-lan)"
+
+ip addr flush dev "$IF" 2>/dev/null || true
+
+if ! brctl show br-lan 2>/dev/null | grep -qw "$IF"; then
+  brctl addif br-lan "$IF" 2>/dev/null || \
+    logger -t layer2vpn "bridge-fix: failed to add $IF to br-lan"
+fi
