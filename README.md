@@ -1,54 +1,37 @@
-# Teltonika Layer-2 VPN Fix
+📘 README.md — Teltonika Layer-2 TAP Bridge Fix
+🔧 Overview
 
-Make OpenVPN TAP clients on Teltonika RUTOS routers behave like **real Layer-2 VPN bridges**:
+Teltonika RUT routers (RUT241, RUT240, RUT200, TRB2xx, etc.) support OpenVPN TAP clients, but they do not reliably attach the TAP interface to the LAN bridge (br-lan).
+When TAP isn’t bridged, Layer-2 traffic breaks, including:
 
-- TAP interfaces never keep a local IP
-- TAP interfaces are always part of `br-lan`
-- Multicast, broadcast, DHCP, ARP, IGMP all flow across LAN ↔ VPN
-- Behavior survives reboots and reconnects
+multicast (224.x.x.x / 239.x.x.x)
 
-Tested on:
+broadcast
 
-- RUT241 (RUT2M_R_00.07.17.x / 00.07.18.x)
-- Should also work on RUT240 / RUT200 / TRB2xx with OpenVPN TAP
+DHCP relay
 
-## 🔧 Problem
+ARP propagation
 
-On RUTOS with OpenVPN TAP (bridged) clients:
+device discovery
 
-- The TAP interface (`tap_c_1`) gets its own IP
-- It is not always added to `br-lan`
-- Multicast and broadcast often fail between LANs over the VPN
-- Reconnects can leave TAP detached or re-IP’d
+cross-site service announcements
 
-## ✅ What this fix does
+L2 TAK / ATAK multicast plugins
 
-When you run the installer on the router:
+camera feeds using multicast
 
-1. Installs `/etc/hotplug.d/iface/99-vpn-bridge`  
-   - Flushes any IP on `tap*` / `ovpn*`  
-   - Adds them to `br-lan`
+This repository installs a simple background watchdog on the Teltonika router that:
 
-2. Installs `/root/tap-bridge-watchdog.sh`  
-   - Every 5 seconds:
-     - Finds all `tap*` / `ovpn*`
-     - Flushes IPs
-     - Ensures they are attached to `br-lan`
+constantly checks for TAP interfaces (tap*)
 
-3. Updates `/etc/rc.local`  
-   - Starts the watchdog automatically at boot
+automatically adds them into br-lan if missing
 
-4. Patches OpenVPN UCI TAP clients (e.g. `openvpn.inst1`)  
-   - `ifconfig_noexec = 1` (OpenVPN does not assign IP to TAP)  
-   - `script_security = 2`  
-   - `up = /etc/hotplug.d/iface/99-vpn-bridge`  
-   - `up_restart = 1`
+keeps them bridged through reconnects, reboots, OpenVPN renegotiations, and firmware quirks
 
-5. Restarts OpenVPN.
+No hotplug rules.
+No UCI hacks.
+No modifying .ovpn files.
+No IP flushing.
+No race conditions.
 
-## 🚀 Install (on the router)
-
-SSH into the RUT241 and run:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/jake-slate-git/teltonika-layer2vpn-fix/main/install.sh | sh
+Just pure Layer-2 reliability.
