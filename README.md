@@ -1,8 +1,9 @@
 📘 README.md — Teltonika Layer-2 TAP Bridge Fix
 🔧 Overview
 
+```sh
 curl -fsSL https://raw.githubusercontent.com/jake-slate-git/teltonika-layer2vpn-fix/main/install.sh | sh
-
+```
 
 Teltonika RUT routers (RUT241, RUT240, RUT200, TRB2xx, etc.) support OpenVPN TAP clients, but they do not reliably attach the TAP interface to the LAN bridge (br-lan).
 When TAP isn’t bridged, Layer-2 traffic breaks, including:
