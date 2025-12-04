@@ -16,10 +16,6 @@ DHCP relay
 
 ARP propagation
 
-device discovery
-
-cross-site service announcements
-
 L2 TAK / ATAK multicast plugins
 
 camera feeds using multicast
@@ -31,11 +27,3 @@ constantly checks for TAP interfaces (tap*)
 automatically adds them into br-lan if missing
 
 keeps them bridged through reconnects, reboots, OpenVPN renegotiations, and firmware quirks
-
-No hotplug rules.
-No UCI hacks.
-No modifying .ovpn files.
-No IP flushing.
-No race conditions.
-
-Just pure Layer-2 reliability.
